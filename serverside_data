@@ -1,0 +1,32 @@
+import time
+import pandas as pd
+from dash_extensions.enrich import DashProxy, Output, Input, State, ServersideOutput, html, dcc, \
+    ServersideOutputTransform
+
+app = DashProxy(transforms=[ServersideOutputTransform()])
+app.layout = html.Div(
+    [
+        html.Button("Query data", id="btn"),
+        dcc.Dropdown(id="dd"),
+        dcc.Graph(id="graph"),
+        html.Button(id="btn1",children="sho2"),
+        html.Div(id="test"),
+        dcc.Loading(dcc.Store(id="store"), fullscreen=True, type="dot"),
+    ]
+)
+
+@app.callback(ServersideOutput("store", "data"),
+              Input("btn", "n_clicks"), prevent_initial_call=True)
+def query_data(n_clicks):
+    time.sleep(3)  # emulate slow database operation
+    df=pd.DataFrame([[1,2,3],[4,5,6]])
+    return df
+
+@app.callback(Output("test","children"),Input("btn1","n_clicks"),State("store","data"),
+              prevent_initila_call=True)
+def process(n,df):
+    return(f"data={df.iat[0,0]}")
+    
+    
+if __name__ == "__main__":
+    app.run_server()
